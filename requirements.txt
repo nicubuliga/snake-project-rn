@@ -1,0 +1,11 @@
+backports.entry-points-selectable==1.1.1
+distlib==0.3.3
+filelock==3.4.0
+numpy==1.21.4
+Pillow==8.4.0
+platformdirs==2.4.0
+# Editable install with no version control (ple==0.0.1)
+-e c:\users\nicub\appdata\local\programs\python\python38\lib\site-packages\ple-0.0.1-py3.8.egg
+pygame==2.1.0
+six==1.16.0
+virtualenv==20.10.0
