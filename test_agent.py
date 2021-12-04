@@ -21,6 +21,7 @@ for i in range(100):
     while not env.game_over():
 
         current_state = env.getGameState()
+        # x = np.asarray([0, 1, 0, 0, 0, 1, 0, -1])
         x = agent.get_input(current_state, game, env)
         q_vals = model.predict(x.reshape(1, len(x)), batch_size=1)
         action = np.argmax(q_vals)
