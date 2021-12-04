@@ -58,6 +58,18 @@ def experience_replay():
         epsilon *= epsilon_factor
 
 
+def get_distance(state):
+    head_snake_x = state['snake_head_x']
+    head_snake_y = state['snake_head_y']
+    food_x = state['food_x']
+    food_y = state['food_y']
+
+    a = np.asarray([head_snake_x, head_snake_y])
+    b = np.asarray([food_x, food_y])
+
+    return np.linalg.norm(a - b)
+
+
 def train():
     global memory
     global epsilon
@@ -67,7 +79,10 @@ def train():
             print()
 
             for j in range(max_states):
+                if env.game_over():
+                    break
                 current_state = env.getGameState()
+                old_distance = get_distance(current_state)
                 q_vals = agent.predict(current_state, game, env)
 
                 if np.random.rand() <= epsilon:
@@ -77,9 +92,17 @@ def train():
 
                 reward = env.act(env.getActionSet()[action])
                 new_state = env.getGameState()
+                new_distance = get_distance(new_state)
+
+                if new_distance <= old_distance:
+                    reward += 1
+                else:
+                    reward -= 1
 
                 memory.append((current_state, action, reward, new_state))
                 experience_replay()
+
+            print("Score: {}".format(env.score()))
     except:
         agent.save_model()
 
