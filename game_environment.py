@@ -17,14 +17,14 @@ mini_batch_size = 500
 
 env = PLE(game, fps=60, display_screen=True, num_steps=5, force_fps=True, reward_values={
     "positive": 10.0,
-    "negative": -100.0,
-    "tick": 0.0,
+    "negative": -1.0,
+    "tick": 0.01,
     "loss": -100.0,
     "win": 5.0
 })
 env.init()
 
-nr_games = 2000
+nr_games = 300
 max_states = 10000
 
 
@@ -41,48 +41,15 @@ def experience_replay():
     next_states = np.array([i[3] for i in minibatch])
     dones = np.array([i[4] for i in minibatch])
 
-    states = np.squeeze(states)
-    next_states = np.squeeze(next_states)
+    new_q_values = rewards + gamma * (np.amax(agent.predict_on_batch(next_states), axis=1)) * (1 - dones)
+    targets = agent.predict_on_batch(states)
 
-    targets = rewards + gamma * (np.amax(agent.predict_on_batch(next_states), axis=1)) * (1 - dones)
-    targets_full = agent.predict_on_batch(states)
+    for i in range(len(targets)):
+        targets[i][actions[i]] = new_q_values[i]
 
-    ind = np.array([i for i in range(mini_batch_size)])
-    targets_full[[ind], [actions]] = targets
-
-    agent.train_batch(states, targets_full)
+    agent.train_batch(states, targets)
     if epsilon > min_epsilon:
         epsilon *= epsilon_factor
-
-
-# def experience_replay():
-#     global epsilon
-#
-#     if len(memory) < mini_batch_size:
-#         return
-#     mini_batch = random.sample(memory, mini_batch_size)
-#     x_train = []
-#     y_train = []
-#     for instance in mini_batch:
-#         # Get max_Q(S',a)
-#         old_state, action, reward, new_state = instance
-#         old_qval = agent.predict(old_state, game, env)
-#         new_qval = agent.predict(new_state, game, env)
-#         max_q = np.max(new_qval)
-#         y = np.zeros((1, 5))
-#         y[:] = old_qval[:]
-#         if reward != -1:  # non-terminal state
-#             update = (reward + (gamma * max_q))
-#         else:  # terminal state
-#             update = reward
-#         y[0][action] = update
-#         x = agent.get_input(old_state, game, env)
-#         x_train.append(x.reshape(1, len(x)))
-#         y_train.append(y)
-#
-#     agent.train_batch(np.asarray(x_train), np.asarray(y_train), batch_size=mini_batch_size)
-#     if epsilon > min_epsilon:
-#         epsilon *= epsilon_factor
 
 
 def get_distance(state):
@@ -129,10 +96,15 @@ def train():
 
             new_distance = get_distance(new_state)
 
-            if new_distance <= old_distance:
-                reward += 5
-            else:
-                reward -= 1
+            # reward -= 0.01
+            # if new_distance < old_distance:
+            #     reward += 4.0
+            # else:
+            #     reward -= 1.0
+
+            if done:
+                print(env.getGameState())
+                print(reward)
             current_state = agent.get_input(current_state, game, env)
             new_state = agent.get_input(new_state, game, env)
             memory.append((current_state, action, reward, new_state, done))

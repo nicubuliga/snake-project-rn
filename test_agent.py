@@ -10,16 +10,17 @@ model = keras.models.load_model('trained_model')
 game = Snake(480, 480, 3)
 gamma = 0.9
 
-env = PLE(game, fps=30, display_screen=True, force_fps=False)
+env = PLE(game, fps=60, num_steps=5, display_screen=True, force_fps=False)
 env.init()
 
 for i in range(100):
     env.reset_game()
     over = False
+    score = 0
 
     print(i)
     while not env.game_over():
-
+        score = max(score, env.score())
         current_state = env.getGameState()
         # x = np.asarray([0, 1, 0, 0, 0, 1, 0, -1])
         x = agent.get_input(current_state, game, env)
@@ -27,3 +28,4 @@ for i in range(100):
         action = np.argmax(q_vals)
         # Act
         env.act(env.getActionSet()[action])
+    print("SCORE: {}".format(score))

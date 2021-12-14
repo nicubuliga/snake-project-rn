@@ -1,18 +1,21 @@
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import RMSprop
 import numpy as np
 import math
 
-layer_sizes = [128, 128, 128]
+layer_sizes = [32]
 model = Sequential()
 for i in range(len(layer_sizes)):
     if i == 0:
         model.add(Dense(layer_sizes[i], input_shape=(13,), activation='relu'))
     else:
         model.add(Dense(layer_sizes[i], activation='relu'))
-model.add(Dense(5, activation='softmax'))
-model.compile(loss='mse', optimizer=Adam(lr=0.00002))
+model.add(Dense(5, activation='linear'))
+# rms = RMSprop()
+adam = Adam(learning_rate=0.01)
+model.compile(loss='mse', optimizer=adam)
 
 
 def predict(state, game, env):
@@ -60,8 +63,12 @@ def get_input(state, game, env):
     wall_right = float(head_snake_x >= max_rate * width)
 
     close_to_body = 0.0
+    # suma = 0.0
+    # for dist in state['snake_body']:
+    #     suma += dist / 480.0
+    # # suma /= len(state['snake_body'])
     for index in range(2, len(state['snake_body'])):
-        if state['snake_body'][index] < 5.0:
+        if state['snake_body'][index] <= state['snake_body'][1]:
             close_to_body = 1.0
             break
 
